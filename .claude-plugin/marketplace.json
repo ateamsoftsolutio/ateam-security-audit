@@ -1,0 +1,16 @@
+{
+  "name": "ateam-security",
+  "owner": {
+    "name": "ATeam Soft Solutions"
+  },
+  "metadata": {
+    "description": "Security plugins from ATeam Soft Solutions."
+  },
+  "plugins": [
+    {
+      "name": "ateam-security-audit",
+      "source": "./",
+      "description": "Audit, fix, verify, repeat. A security audit loop with a tracked findings register, rescans that confirm every fix, and a sign-off gate."
+    }
+  ]
+}
