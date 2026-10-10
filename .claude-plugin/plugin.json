@@ -1,0 +1,11 @@
+{
+  "name": "ateam-security-audit",
+  "displayName": "Security Audit Loop by ATeam",
+  "version": "1.0.0",
+  "description": "Audit, fix, verify, repeat. A security audit loop for software projects: open-source scanners for secrets, code, dependencies, infrastructure and CI, plus Claude's review of access control, business logic and AI features. Findings go into a tracked register, developers fix them, rescans confirm every fix, and a gate decides when the project is ready for sign-off.",
+  "author": { "name": "ATeam Soft Solutions", "url": "https://www.ateamsoftsolutions.com" },
+  "homepage": "https://www.ateamsoftsolutions.com",
+  "repository": "https://github.com/ateamsoftsolutio/ateam-security-audit",
+  "license": "MIT",
+  "keywords": ["security", "audit", "sast", "secrets", "dependencies", "owasp", "devsecops", "code-review"]
+}
