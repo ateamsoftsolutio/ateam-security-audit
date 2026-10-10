@@ -23,7 +23,7 @@ The most common serious flaw, and scanners rarely find it.
 - [ ] Is the session ID regenerated after login (session fixation)? Is it destroyed on logout?
 - [ ] Cookies: `HttpOnly`, `Secure`, `SameSite`, a sensible expiry, not the framework's default name?
 - [ ] JWT: is the signature verified, the algorithm fixed (no `none`, no algorithm confusion), `exp` checked, the secret strong and not hard-coded? Are tokens kept out of `localStorage` when they carry high privilege?
-- [ ] Password reset: are tokens random, single-use and short-lived? Is the reset link built from the request's Host header (host header poisoning)?
+- [ ] Password reset: are tokens random, single-use and short-lived? Is the reset link built from a request header an attacker can set (header poisoning)?
 - [ ] Is multi-factor authentication available for admin accounts where the data warrants it?
 - [ ] OAuth/OIDC: are `state` and PKCE used and redirect URIs validated?
 
@@ -42,8 +42,8 @@ Trace from source (request, file, header, queue message, model output) to sink.
 
 ## 4. Server-side request forgery and outbound calls (A01:2025)
 
-- [ ] Does the server make requests to a URL, host or path the user controls (webhooks, link previews, adding images or files by link, PDF rendering)?
-- [ ] Are internal addresses blocked, including `169.254.169.254`, `localhost`, private ranges and redirects to them?
+- [ ] Does the server make requests to a URL or path the user controls (webhooks, link previews, adding images or files by link, PDF rendering)?
+- [ ] Are internal addresses blocked, including the cloud metadata address, loopback, private ranges and redirects to them?
 - [ ] Are outbound calls to third parties made with timeouts, and is TLS verification left on?
 
 ## 5. Files and uploads
@@ -124,7 +124,7 @@ Check these whenever the project calls a language model, uses embeddings or retr
 Raise these as **flags to check with the right person**, not as legal findings.
 
 - **Health data:** HIPAA (US); health-data rules in the UAE (DHA, DoH) and Saudi Arabia; the Australian Privacy Act; encryption, audit logs, access control and data residency.
-- **Payment cards:** PCI DSS. Card numbers should never touch the application if a hosted payment page or tokenisation is available.
+- **Payment cards:** PCI DSS. Card numbers should never touch the application if a provider's payment page or tokenisation is available.
 - **Personal data:** GDPR or UK GDPR, the UAE and Saudi PDPLs, India's DPDP Act, the Australian Privacy Act, US state laws. Check consent, retention, deletion, cross-border transfer and data residency.
 - **Children's data:** extra consent and minimisation duties in most regions.
 

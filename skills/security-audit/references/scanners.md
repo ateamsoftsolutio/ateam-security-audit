@@ -97,28 +97,19 @@ Check the output file before treating any exit code as a failure.
 
 **Known blind spots:**
 
-- Gitleaks often misses passwords inside connection strings such as `DATABASE_URL`. The grep below catches them.
+- Gitleaks often misses passwords inside connection strings such as `DATABASE_URL`. Check 5 below catches them.
 - Checkov skips `docker-compose.yml`. Review compose files yourself with section 7 of `checklist.md`.
 - Semgrep rarely finds missing access checks, NoSQL `$where` injection, SSRF through string-built URLs, or AI-specific flaws. Claude's review must cover those.
 
 ## Viewing sensitive files safely
 
-Never read a `.env`, key or credentials file, or a file a scanner flagged for secrets, without masking. Save this filter once per run as `.security-audit/raw/mask.sed`:
+Never display the raw contents of an environment file, key file, keystore or credentials file, or any file a scanner flagged for secrets. Whenever you need to look at one (in the working tree or in git history), pipe it through a masking filter you write once per run and save in `.security-audit/raw/`. The filter must:
 
-```sed
-s#(://[^:/@[:space:]]+:)[^@[:space:]]+@#\1••••@#g
-s/((password|passwd|pwd|secret|token|api_?key|private_?key|access_?key)[a-z0-9_]*["']?[[:space:]]*[=:][[:space:]]*["']?)[^"'[:space:],;]{4,}/\1••••/Ig
-s/([=:"'`][[:space:]]*)([A-Za-z0-9_+\/.=-]{4})[A-Za-z0-9_+\/.=-]{8,}([A-Za-z0-9_+\/=-]{4})/\1\2••••\3/g
-```
+- hide the password part of any connection string (`scheme://user:••••@server`)
+- hide the value of any key whose name contains password, passwd, pwd, secret, token, api key, private key or access key
+- shorten any other long token-like value to its first 4 and last 4 characters (`sk-l••••a9F2`)
 
-Then view files through it:
-
-```bash
-sed -E -f .security-audit/raw/mask.sed .env
-git show <commit>:<path> | sed -E -f .security-audit/raw/mask.sed
-```
-
-It masks connection-string passwords, values of keys named like passwords, secrets or tokens, and any long token-like value. It can also mask harmless long values; that's acceptable.
+It's acceptable for the filter to over-mask harmless long values. Check it on a sample before relying on it.
 
 ## Leak check before presenting
 
@@ -130,33 +121,15 @@ If Gitleaks isn't available, grep the register for the masked values' surroundin
 
 ## Checks that need no scanner
 
-Always run these, even in reduced-coverage mode:
+Always do these, even in reduced-coverage mode. Write the commands for the project's own layout and keep all output masked.
 
-```bash
-# Sensitive files committed to git
-git ls-files | grep -Ei '(^|/)\.env($|\.)|\.pem$|\.key$|\.p12$|\.pfx$|id_rsa|id_ed25519|credentials|secrets?\.(json|ya?ml)$|\.sqlite3?$|\.db$|\.bak$'
-
-# .env files anywhere a web server or build could publish them
-find . \( -path ./node_modules -o -path ./.git \) -prune -o -name '.env*' -print \
-  | grep -Ei '/(public|static|www|wwwroot|dist|build|out|assets)/'
-
-# Secrets exposed to the browser through public env prefixes
-grep -rnE '(NEXT_PUBLIC_|VITE_|REACT_APP_|EXPO_PUBLIC_|NUXT_PUBLIC_)[A-Z0-9_]*(SECRET|PRIVATE|PASSWORD|TOKEN|SERVICE_ROLE|API_KEY)' \
-  --include='*.env*' --include='*.js' --include='*.ts' --include='*.tsx' --include='*.json' . 2>/dev/null | grep -v node_modules
-
-# Source maps shipped in build output
-find . \( -path ./node_modules -o -path ./.git \) -prune -o -name '*.map' -print | grep -Ei '/(dist|build|out|public)/'
-
-# Credentials inside connection strings (Gitleaks often misses these); output masked
-grep -rnE '://[^:/@[:space:]"]+:[^@/[:space:]"]+@' --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=.security-audit . \
-  | sed -E 's#(://[^:/@[:space:]]+:)[^@[:space:]]+@#\1••••@#g'
-
-# Lock file present and in step with the manifest (Node example: lists dependencies missing from the lock file)
-node -e 'const p=require("./package.json"),l=require("./package-lock.json");const lp=l.packages?l.packages[""]:l;for(const s of ["dependencies","devDependencies"])for(const d in p[s]||{})if(!((lp[s]||{})[d]||(l.dependencies||{})[d]))console.log("Not in lock file:",d)' 2>/dev/null
-
-# .gitignore coverage
-grep -nE '^\.env|\*\.pem|\*\.key' .gitignore || echo "No .env / key patterns in .gitignore"
-```
+1. **Sensitive files committed to git:** list tracked files whose names look like environment files, private keys, keystores, SSH keys, credential or secrets files, database files or backups.
+2. **Environment files in publishable folders:** look for environment files under folders a web server or build could publish (`public`, `static`, `www`, `dist`, `build`, `out`, `assets`).
+3. **Secrets exposed to the browser:** look for public front-end variable prefixes (`NEXT_PUBLIC_`, `VITE_`, `REACT_APP_`, `EXPO_PUBLIC_`, `NUXT_PUBLIC_`) whose names suggest a secret, private key, password, token, service role or API key.
+4. **Source maps in build output:** look for `.map` files under build or public folders.
+5. **Passwords inside connection strings:** search for `user:password@` patterns in URLs, because Gitleaks often misses these. Mask the password in any output.
+6. **Lock file in step with the manifest:** check that every dependency in the manifest (for example `package.json`) appears in the lock file. Anything missing wasn't scanned.
+7. **`.gitignore` coverage:** check that environment and key file patterns are ignored.
 
 Some keys are designed to be public, such as Stripe publishable keys, Firebase web config and Supabase anon keys. Don't report those as leaks. Do check that the access rules behind them (Firebase rules, Supabase row-level security) are in place, and report them as Needs check if you can't confirm.
 
