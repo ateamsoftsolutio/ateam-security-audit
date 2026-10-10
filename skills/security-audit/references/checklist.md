@@ -42,7 +42,7 @@ Trace from source (request, file, header, queue message, model output) to sink.
 
 ## 4. Server-side request forgery and outbound calls (A01:2025)
 
-- [ ] Does the server make requests to a URL, host or path the user controls (webhooks, link previews, image import, "import from URL", PDF rendering)?
+- [ ] Does the server make requests to a URL, host or path the user controls (webhooks, link previews, adding images or files by link, PDF rendering)?
 - [ ] Are internal addresses blocked, including `169.254.169.254`, `localhost`, private ranges and redirects to them?
 - [ ] Are outbound calls to third parties made with timeouts, and is TLS verification left on?
 

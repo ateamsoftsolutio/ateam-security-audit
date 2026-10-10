@@ -107,7 +107,7 @@ Never read a `.env`, key or credentials file, or a file a scanner flagged for se
 
 ```sed
 s#(://[^:/@[:space:]]+:)[^@[:space:]]+@#\1••••@#g
-s/((pass(word)?|pwd|secret|token|api_?key|private_?key|access_?key)[a-z0-9_]*["']?[[:space:]]*[=:][[:space:]]*["']?)[^"'[:space:],;]{4,}/\1••••/Ig
+s/((password|passwd|pwd|secret|token|api_?key|private_?key|access_?key)[a-z0-9_]*["']?[[:space:]]*[=:][[:space:]]*["']?)[^"'[:space:],;]{4,}/\1••••/Ig
 s/([=:"'`][[:space:]]*)([A-Za-z0-9_+\/.=-]{4})[A-Za-z0-9_+\/.=-]{8,}([A-Za-z0-9_+\/=-]{4})/\1\2••••\3/g
 ```
 
@@ -124,10 +124,7 @@ It masks connection-string passwords, values of keys named like passwords, secre
 
 The register must never contain a secret. Scan it before showing results:
 
-```bash
-for f in $(find .security-audit -path .security-audit/raw -prune -o -type f -print); do
-  gitleaks dir --redact --no-banner --exit-code 1 "$f" >/dev/null 2>&1 || echo "Possible secret in $f"; done
-```
+Run `gitleaks dir --redact --no-banner --exit-code 1 <file>` on each file in `.security-audit/` except the `raw/` folder. Any file it flags must be fixed before you go on.
 
 If Gitleaks isn't available, grep the register for the masked values' surrounding text and for long token-like strings.
 
