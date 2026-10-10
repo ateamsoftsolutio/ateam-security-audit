@@ -6,10 +6,7 @@ Save all output to `.security-audit/raw/R<n>/`. That folder is never committed.
 
 ## Check what's installed
 
-```bash
-for t in gitleaks semgrep osv-scanner trivy checkov zizmor bandit pip-audit npm; do
-  printf "%-12s" "$t"; command -v "$t" >/dev/null 2>&1 && echo "installed" || echo "missing"; done
-```
+For each tool in the tables below, check whether it's on the PATH (for example with `command -v <tool>`) and report which are installed and which are missing.
 
 ## Core set
 
@@ -43,46 +40,37 @@ Always:
 
 ## Commands
 
-Run from the project root. Replace `R1` with the current run number.
+Run from the project root. Save every output in the current run folder (`raw/R<n>/` inside the audit folder), written below as `<run>`.
 
-```bash
-OUT=.security-audit/raw/R1 && mkdir -p "$OUT"
+**Secrets.** First save this Gitleaks config as `gitleaks.toml` in the audit folder's `raw/` folder (written below as `<config>`). It keeps Gitleaks out of earlier audit output and `node_modules`. For Gitleaks older than 8.25, use `[allowlist]` instead of `[[allowlists]]`.
 
-# Secrets: git history, then the working tree (catches untracked .env files).
-# The config keeps Gitleaks out of earlier audit output and node_modules.
-cat > .security-audit/raw/gitleaks.toml <<'EOF'
+```toml
 [extend]
 useDefault = true
 
 [[allowlists]]
 description = "Exclude audit output and dependencies"
 paths = ['''(^|/)\.security-audit/''', '''(^|/)node_modules/''']
-EOF
-gitleaks git --redact -c .security-audit/raw/gitleaks.toml --report-format json --report-path "$OUT/gitleaks-history.json" .
-gitleaks dir --redact -c .security-audit/raw/gitleaks.toml --report-format json --report-path "$OUT/gitleaks-files.json" .
-#   Gitleaks older than 8.19: gitleaks detect --source . --redact ... (add --no-git for the working tree)
-#   Gitleaks older than 8.25: use [allowlist] instead of [[allowlists]] in the config
-
-# Code
-semgrep scan --config p/default --config p/owasp-top-ten --metrics=off --json -o "$OUT/semgrep.json" --quiet .
-#   Add a language pack if useful: --config p/javascript, p/typescript, p/python, p/java, p/php, p/golang
-#   Don't use --config auto: it requires metrics to be sent.
-
-# Dependencies
-osv-scanner scan source -r --format json --output-file "$OUT/osv.json" .
-#   OSV-Scanner v1: osv-scanner -r --format json --output "$OUT/osv.json" .
-#   Offline: add --offline-vulnerabilities --download-offline-databases
-npm audit --json > "$OUT/npm-audit.json"                    # Node, if a lock file exists
-pip-audit -r requirements.txt -f json -o "$OUT/pip-audit.json"  # Python
-
-# Infrastructure and CI
-checkov -d . --quiet --compact -o json --skip-download > "$OUT/checkov.json"
-zizmor --offline --format json .github/workflows > "$OUT/zizmor.json"   # if the folder exists
-
-# Optional
-bandit -r . -f json -o "$OUT/bandit.json" -x ./node_modules,./.venv,./venv
-trivy fs --scanners vuln,secret,misconfig --format json --output "$OUT/trivy.json" .
 ```
+
+| Purpose | Command |
+|---|---|
+| Secrets in git history | `gitleaks git --redact -c <config> --report-format json --report-path <run>/gitleaks-history.json .` |
+| Secrets in the working tree (catches untracked environment files) | `gitleaks dir --redact -c <config> --report-format json --report-path <run>/gitleaks-files.json .` |
+| Code | `semgrep scan --config p/default --config p/owasp-top-ten --metrics=off --json -o <run>/semgrep.json --quiet .` |
+| Dependencies | `osv-scanner scan source -r --format json --output-file <run>/osv.json .` |
+| Node dependencies (if a lock file exists) | `npm audit --json`, saved to `<run>/npm-audit.json` |
+| Python dependencies | `pip-audit -r requirements.txt -f json -o <run>/pip-audit.json` |
+| Infrastructure as code | `checkov -d . --quiet --compact -o json --skip-download`, saved to `<run>/checkov.json` |
+| CI workflows (if `.github/workflows` exists) | `zizmor --offline --format json .github/workflows`, saved to `<run>/zizmor.json` |
+| Python code (optional) | `bandit -r . -f json -o <run>/bandit.json -x ./node_modules,./.venv,./venv` |
+| Broad file-system scan (optional) | `trivy fs --scanners vuln,secret,misconfig --format json --output <run>/trivy.json .` |
+
+Notes:
+
+- **Older versions:** Gitleaks older than 8.19 uses `gitleaks detect --source .` (add `--no-git` for the working tree). OSV-Scanner v1 uses `osv-scanner -r --format json --output <file> .`
+- **Semgrep:** add a language pack if useful (`p/javascript`, `p/typescript`, `p/python`, `p/java`, `p/php`, `p/golang`). Don't use `--config auto`: it requires metrics to be sent.
+- **Offline dependency scanning:** add `--offline-vulnerabilities --download-offline-databases` to OSV-Scanner.
 
 Many scanners exit with a non-zero code when they find issues:
 
