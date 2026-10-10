@@ -110,7 +110,7 @@ Entry points · Authentication · Authorisation · Data stores and external call
 | `verification` | `{ "run": "R3", "commit": "e7f8a9b", "evidence": "Query now parameterised (search.js:40-44); Semgrep rule no longer matches", "test": "added: test/search.sql-injection.test.js, passes" }`. If there's no test, say why, for example `"none: project has no test suite"`. |
 | `falsePositive` | `{ "reason": "...", "raisedBy": "Anu", "claudeView": "agrees / disagrees: ...", "reviewerRequested": "Rahul", "reviewer": null, "date": null }` |
 | `acceptedRisk` | `{ "reason": "...", "compensatingControl": "...", "proposedBy": "Rahul", "expiresRequested": "2027-01-05", "approverRequired": "Product Owner", "approver": null, "date": null, "expires": null }`. `approver`, `date` and `expires` are filled in only on approval; `expires` is counted from the approval date. |
-| `ticket` | `{ "system": "github", "ref": "#118", "url": "https://github.com/org/repo/issues/118" }` |
+| `ticket` | `{ "system": "github", "ref": "#118", "url": "<link to the issue>" }` |
 
 Each location also stores `fpInput`, the exact values used for its fingerprint (never a secret), so later runs can reproduce it.
 

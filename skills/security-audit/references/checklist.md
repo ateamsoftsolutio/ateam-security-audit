@@ -33,7 +33,7 @@ Trace from source (request, file, header, queue message, model output) to sink.
 
 - [ ] **SQL:** queries built with string concatenation or template literals, or raw queries in an ORM.
 - [ ] **NoSQL:** user objects passed into query filters (`{ $gt: "" }`), `$where`, or `mapReduce` with user input.
-- [ ] **OS commands:** `exec`, `system`, `child_process`, `subprocess` with `shell=True`, backticks.
+- [ ] **OS commands:** user input reaching shell-command functions (`child_process`, `os.system`, `subprocess` with `shell=True`, backticks).
 - [ ] **Code execution:** `eval`, `new Function`, `setTimeout` with a string argument, `vm`, Python `exec`, template engines rendering user-supplied templates (SSTI).
 - [ ] **XSS:** auto-escaping turned off, `dangerouslySetInnerHTML`, `v-html`, `innerHTML`, `|safe`, user-controlled `href` or `src` (`javascript:`), Markdown rendered without sanitising.
 - [ ] **Path traversal:** user input in file paths without normalising and checking it stays inside an allowed folder.
@@ -42,7 +42,7 @@ Trace from source (request, file, header, queue message, model output) to sink.
 
 ## 4. Server-side request forgery and outbound calls (A01:2025)
 
-- [ ] Does the server fetch a URL, host or path the user controls (webhooks, link previews, image import, "fetch from URL", PDF rendering)?
+- [ ] Does the server make requests to a URL, host or path the user controls (webhooks, link previews, image import, "import from URL", PDF rendering)?
 - [ ] Are internal addresses blocked, including `169.254.169.254`, `localhost`, private ranges and redirects to them?
 - [ ] Are outbound calls to third parties made with timeouts, and is TLS verification left on?
 
@@ -76,9 +76,9 @@ Trace from source (request, file, header, queue message, model output) to sink.
 
 - [ ] Are there known-vulnerable dependencies? (From the scanners. Focus on direct dependencies and anything reachable at runtime.)
 - [ ] Are lock files present and committed?
-- [ ] Are packages installed from unusual registries or git URLs, or are any names likely typosquats?
+- [ ] Do any dependencies come from unusual registries or git URLs, or have names that look like typosquats?
 - [ ] CI: are actions pinned to commit SHAs? Are `pull_request_target` workflows checking out untrusted code? Are secrets exposed to forks? Is `GITHUB_TOKEN` write permission broader than needed?
-- [ ] Are scripts loaded from CDNs without Subresource Integrity?
+- [ ] Do pages include third-party CDN assets without Subresource Integrity?
 - [ ] Do auto-update or plugin mechanisms verify signatures?
 
 ## 9. Logging, errors and exceptional conditions (A09:2025, A10:2025)
@@ -110,7 +110,7 @@ Check these whenever the project calls a language model, uses embeddings or retr
 
 - [ ] **LLM01 Prompt injection:** can untrusted content (user messages, emails, web pages, documents, retrieved chunks, tool results) change the model's behaviour? Is untrusted content clearly separated from instructions? Are sensitive actions gated outside the model?
 - [ ] **LLM02 Sensitive information disclosure:** can the model reveal other users' data, secrets or internal data? Is personal or health data sent to providers without a lawful basis or a data-processing agreement?
-- [ ] **LLM03 Supply chain:** models or datasets downloaded from untrusted sources, or pickled model files loaded without checks?
+- [ ] **LLM03 Supply chain:** models or datasets from untrusted sources, or pickled model files opened without checks?
 - [ ] **LLM04 Data and model poisoning:** can users write into the retrieval store or fine-tuning data that others will receive?
 - [ ] **LLM05 Improper output handling:** is model output passed into HTML, SQL, shell commands, file paths, `eval` or redirects without validation?
 - [ ] **LLM06 Excessive agency:** can the model call tools that send, delete, pay or change records without a human confirmation step, with credentials scoped more widely than needed?

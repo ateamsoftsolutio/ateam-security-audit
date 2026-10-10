@@ -8,7 +8,7 @@ Offer these at sign-off so scans keep running on every pull request. Adapt them 
   - GitHub Actions: pin to a full 40-character commit SHA, with the version as a comment.
   - Container images: pin by digest (`@sha256:...`), with the tag as a comment.
 - **Never invent a SHA or digest.** Resolve them:
-  - actions: `git ls-remote https://github.com/actions/checkout 'refs/tags/v4*'`
+  - actions: run `git ls-remote --tags` against the action's own repository and pick the tag's commit
   - images: `docker buildx imagetools inspect <image>:<tag>`
   - or use the GitHub connector
 
@@ -42,20 +42,20 @@ jobs:
 
       - name: Secrets (Gitleaks)
         run: |
-          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/repo" \
+          docker run --rm --user "$(id -u):$(id -g)" -v "${{ github.workspace }}:/repo" \
             zricethezav/gitleaks@sha256:<PIN_ME> \
             git --redact --exit-code 1 /repo
 
       - name: Code (Semgrep)
         run: |
-          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep@sha256:<PIN_ME> \
+          docker run --rm -v "${{ github.workspace }}:/src" -w /src semgrep/semgrep@sha256:<PIN_ME> \
             semgrep scan --config p/default --config p/owasp-top-ten --metrics=off \
             --severity ERROR --error
 
       - name: Dependencies (OSV-Scanner, report only)
         continue-on-error: true   # remove once the dependency backlog is cleared
         run: |
-          docker run --rm -v "$PWD:/src" ghcr.io/google/osv-scanner@sha256:<PIN_ME> \
+          docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/google/osv-scanner@sha256:<PIN_ME> \
             scan source -r /src
 ```
 
@@ -77,9 +77,9 @@ security_scan:
   variables:
     GIT_DEPTH: 0
   script:
-    - docker run --rm -v "$CI_PROJECT_DIR:/repo" zricethezav/gitleaks@sha256:<PIN_ME> git --redact --exit-code 1 /repo
-    - docker run --rm -v "$CI_PROJECT_DIR:/src" -w /src semgrep/semgrep@sha256:<PIN_ME> semgrep scan --config p/default --metrics=off --severity ERROR --error
-    - docker run --rm -v "$CI_PROJECT_DIR:/src" ghcr.io/google/osv-scanner@sha256:<PIN_ME> scan source -r /src || true
+    - docker run --rm -v "$(pwd):/repo" zricethezav/gitleaks@sha256:<PIN_ME> git --redact --exit-code 1 /repo
+    - docker run --rm -v "$(pwd):/src" -w /src semgrep/semgrep@sha256:<PIN_ME> semgrep scan --config p/default --metrics=off --severity ERROR --error
+    - docker run --rm -v "$(pwd):/src" ghcr.io/google/osv-scanner@sha256:<PIN_ME> scan source -r /src || true
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
