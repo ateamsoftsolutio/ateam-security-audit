@@ -26,10 +26,10 @@ The rules of `security-audit` apply here too: authorised code only, static by de
 ## Step 1: Prepare the run
 
 1. Read `findings.json`, `scope.md` and the house rules.
-2. Start run `R<n>`, the next number. Record the current commit (`git rev-parse --short HEAD`) and whether the working tree has uncommitted changes. If it does, say so and record it. A sign-off must be against a commit, not uncommitted work.
+2. Start run `R<n>`, the next number. Record the current commit (`git rev-parse --short HEAD`) and whether the working tree has uncommitted changes. If it does, say so and record it. A sign-off must be against a commit, not uncommitted work. Record the agent and model doing the review in the run's `agent` field in `findings.json` and in the run summary, using the names given in your own instructions or by the user. Don't run commands or open settings or environment files to find them. If they aren't stated, write "not reported".
 3. **Choose the run type:**
    - **Quick verify** (the default during the fix loop): rescans and reviews files changed since the last run (`git diff --name-only <last run commit>`). Re-checks every finding with a location in a changed file, every finding marked `Fixed`, and every secret's rotation state. Findings whose files haven't changed carry their status forward unchanged. Record coverage as "Quick (carried forward from R<n>)".
-   - **Full verify:** repeats `security-audit` Steps 4 to 6 (scanners, Claude's review, triage) across the whole scope. It's **required before sign-off**. Also use it when more than about 30% of files have changed, the scope has changed, or more than 30 days have passed since the last full run.
+   - **Full verify:** repeats `security-audit` Steps 4 to 6 (scanners, your own review, triage) across the whole scope. It's **required before sign-off**. Also use it when more than about 30% of files have changed, the scope has changed, or more than 30 days have passed since the last full run.
 
    Tell the user which type you're running and why.
 
@@ -61,7 +61,7 @@ Compute fingerprints for the new results and match them to the register (`regist
 - on an Open finding, log a `note` and point it out to the user
 - on a line with no finding, review the line as if the suppression weren't there
 
-**Secrets:** a secret finding is resolved only when `secret.rotated` is true. A deleted file doesn't resolve it, because the secret is still in git history (`register-format.md`).
+**Secrets:** a secret finding is resolved only when `secret.rotated` is true. A deleted file doesn't resolve it, because the secret is still in git history. A different secret under the same key name is a new finding, not the old one found again (`register-format.md`, "Secrets are different").
 
 **Overlapping findings:** if a fix removes its own root cause but the same impact is still reachable through another open finding, verify it, and add a note that cross-references the other finding.
 

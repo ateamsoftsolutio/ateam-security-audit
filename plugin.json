@@ -1,0 +1,37 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ateam-security-audit",
+  "version": "1.1.0",
+  "description": "Audit, fix, verify, repeat. A security audit loop for software projects: open-source scanners for secrets, code, dependencies, infrastructure and CI, plus the agent's own review of access control, business logic and AI features. Findings go into a tracked register, developers fix them, rescans confirm every fix, and a gate decides when the project is ready for sign-off.",
+  "author": {
+    "name": "ATeam Soft Solutions",
+    "url": "https://www.ateamsoftsolutions.com"
+  },
+  "homepage": "https://github.com/ateamsoftsolutio/ateam-security-audit",
+  "repository": "https://github.com/ateamsoftsolutio/ateam-security-audit",
+  "license": "MIT",
+  "keywords": ["security", "audit", "sast", "secrets", "dependencies", "owasp", "devsecops", "code-review"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Security Audit Loop by ATeam",
+        "shortDescription": "Audit, fix, verify, repeat",
+        "longDescription": "Security Audit Loop runs a full security audit of a software project and keeps the team on it until every blocking issue is fixed and confirmed.\n\nIt runs free, open-source scanners (Gitleaks, Semgrep Community Edition, OSV-Scanner, Checkov and zizmor) where they're installed, adds its own review of access control, business logic and AI features, and writes every finding to a register in the project, with a permanent ID, severity, OWASP and CWE mapping, and an owner. Developers fix findings one at a time and, for serious ones, state the root cause. A rescan confirms each fix before it's closed, and a gate decides when the project is ready for sign-off.\n\nThree skills: security-audit (scope, scan and register), security-fix (root cause, fix, variants, secret rotation, false positives and accepted risks) and security-verify (rescan, gate, sign-off report and CI setup).\n\nInstructions only: no servers, hooks or scripts. Scanners run on your machine with your approval, and the skills tell the agent to mask secret values. A passed gate means no blocking findings remained against the stated scope; it isn't a guarantee that the application is secure.",
+        "developerName": "ATeam Soft Solutions",
+        "category": "Developer Tools",
+        "capabilities": ["Interactive", "Read", "Write"],
+        "websiteURL": "https://www.ateamsoftsolutions.com",
+        "privacyPolicyURL": "https://github.com/ateamsoftsolutio/ateam-security-audit/blob/main/PRIVACY.md",
+        "termsOfServiceURL": "https://github.com/ateamsoftsolutio/ateam-security-audit/blob/main/LICENSE",
+        "defaultPrompt": [
+          "Run Security Audit on this project",
+          "Help me fix the most urgent finding",
+          "Verify my fixes and run the security gate"
+        ],
+        "brandColor": "#000000",
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
+      }
+    }
+  }
+}

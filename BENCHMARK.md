@@ -46,8 +46,8 @@ Also in that loop:
 ## Caveats
 
 - **The model recognised the app.** NodeGoat is public and well known. Despite our changes, a leftover comment and package metadata let the model identify its origin, so results on unfamiliar, private code are likely to be lower.
-- **One run, one stack.** Results vary between runs and models.
+- **One run, one stack, one model.** The run used Claude. Results vary between runs, and in Cursor, Codex or other tools the review is done by whichever model you choose.
 - **No penetration test.** The benchmark measures static audit and fix verification, not testing of a running system.
-- **Changes since the run.** We improved the skills based on this test (dependency grouping, masked viewing of secret files, secret matching across deletions, diff review in the fix step). Those changes were not re-benchmarked.
+- **Changes since the run.** We improved the skills based on this test (dependency grouping, masked viewing of secret files, secret matching across deletions, diff review in the fix step). Those changes were not re-benchmarked. Version 1.1.0 wasn't re-benchmarked either, and the plugin hasn't been benchmarked outside Claude.
 
 We'll publish further benchmarks on other stacks as we run them.

@@ -1,6 +1,6 @@
 # Sign-off report template
 
-Produce this only when a **full** verify run has passed the gate. Write it in plain language for a technical manager or a client's IT lead. Use the format from the house rules: a Markdown file in `.security-audit/report/` by default, or a Claude Doc or Word document if preferred.
+Produce this only when a **full** verify run has passed the gate. Write it in plain language for a technical manager or a client's IT lead. Use the format from the house rules: a Markdown file in `.security-audit/report/` by default, or a Word or shared document if preferred and you can produce one in this environment. If you can't, write the Markdown file and tell the user.
 
 Never include secret values (masked or not, beyond the type of secret), exploit steps, or personal data.
 
@@ -29,6 +29,7 @@ Two or three sentences: what was audited, what was found at the start, what was 
 - **In scope:** ...   **Out of scope:** ...
 - **Application context:** exposure, data types, countries and sectors
 - **Automated tools:** <tool and version, one per line>
+- **AI agent and model:** <as recorded for each run, or "not recorded (version 1.0)">
 - **Code review:** areas covered by AI-assisted review (access control, authentication, injection, SSRF, files, secrets and cryptography, configuration, supply chain and CI, logging and errors, business logic, AI features)
 - **Gate applied:** <the gate, and the approver>
 

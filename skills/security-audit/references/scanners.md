@@ -1,6 +1,6 @@
 # Scanners
 
-Use free, open-source scanners where they're installed or can be installed with the user's approval. Claude reviews and triages their output; they don't replace Claude's review, and Claude doesn't replace them.
+Use free, open-source scanners where they're installed or can be installed with the user's approval. You review and triage their output; they don't replace your own review, and your review doesn't replace them.
 
 Save all output to `.security-audit/raw/R<n>/`. That folder is never committed.
 
@@ -87,7 +87,7 @@ Check the output file before treating any exit code as a failure.
 
 - Gitleaks often misses passwords inside connection strings such as `DATABASE_URL`. Check 5 below catches them.
 - Checkov skips `docker-compose.yml`. Review compose files yourself with section 7 of `checklist.md`.
-- Semgrep rarely finds missing access checks, NoSQL `$where` injection, SSRF through string-built URLs, or AI-specific flaws. Claude's review must cover those.
+- Semgrep rarely finds missing access checks, NoSQL `$where` injection, SSRF through string-built URLs, or AI-specific flaws. Your own review must cover those.
 
 ## Viewing sensitive files safely
 

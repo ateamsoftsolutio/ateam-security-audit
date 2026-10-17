@@ -16,4 +16,4 @@ Copy this file into your project root (or into `.security-audit/`) as `security-
 - **Scanners approved:** Gitleaks, Semgrep Community Edition, OSV-Scanner, Checkov, zizmor, plus stack-specific tools as needed
 - **CI platform:** (for example GitHub Actions)
 - **Full re-audit interval:** every 6 months, or after significant changes
-- **Anything else Claude must always follow:** (add your own rules here)
+- **Anything else the agent must always follow:** (add your own rules here)

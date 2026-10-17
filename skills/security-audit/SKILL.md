@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: Runs a full security audit of a software project. Scopes it, runs open-source scanners for secrets, code, dependencies, infrastructure and CI where available, adds Claude's own review of access control, business logic and AI features, and writes a findings register for developers to fix. Use when someone says "run Security Audit", "audit this project for security", "find security loopholes", "check for leaked keys or .env files", or wants a security review before a release, handover or client delivery.
+description: Runs a full security audit of a software project. Scopes it, runs open-source scanners for secrets, code, dependencies, infrastructure and CI, adds its own review of access control, business logic and AI features, and writes a findings register for developers to fix. Use when someone says "run Security Audit", "audit this project for security", "find security loopholes", "check for leaked keys or .env files", or wants a security review before a release, handover or client delivery.
 ---
 
 # Security Audit
@@ -18,10 +18,10 @@ The reference files sit in this skill's `references/` folder. The other two skil
 | File | Read it when |
 |---|---|
 | `scanners.md` | Choosing, installing and running scanners |
-| `checklist.md` | Doing Claude's own review |
+| `checklist.md` | Doing your own review (Step 5) |
 | `severity.md` | Rating findings |
 | `register-format.md` | Writing the register |
-| `connectors.md` | GitHub, an issue tracker or other connectors are available |
+| `connectors.md` | GitHub, an issue tracker or other connectors (MCP servers) are available |
 | `report-template.md` | Producing the sign-off report |
 | `ci-templates.md` | Setting up scans in CI |
 
@@ -46,7 +46,7 @@ Defaults:
 - **Gate:** no open Critical or High findings. Every Medium is either Verified fixed or an approved Accepted risk. Lows and Info are listed and don't block.
 - **Accepted risks:** must have a reason, an approver and an expiry date no more than 90 days away. Critical findings can't be accepted.
 - **Register in git:** commit `.security-audit/` (except `raw/`) in private repositories; never in public ones.
-- **Report format:** a Markdown file in `.security-audit/report/`, unless a Claude Doc or Word tool is available and the user prefers it.
+- **Report format:** a Markdown file in `.security-audit/report/`, unless you can produce a Word or shared document in this environment and the user prefers it.
 
 ## Step 1: Scope
 
@@ -61,7 +61,7 @@ Detect what you can from the files first (languages, frameworks, Docker, CI, IaC
 5. Countries and sectors it serves, for compliance flags.
 6. **Authorisation:** "Do you own this code or have permission to audit it?" A yes is required to continue.
 7. Anything out of scope: vendored code, generated code, test fixtures, other teams' services.
-8. Connectors available (GitHub, Jira, Linear, Asana, SonarQube, Snyk), and for each, whether project data may be sent to it. See `connectors.md`.
+8. Connectors or MCP servers available (GitHub, Jira, Linear, Asana, SonarQube, Snyk), and for each, whether project data may be sent to it. See `connectors.md`.
 9. Whether the repository is public or private. Check with the GitHub connector or `git remote -v` if you can, but confirm.
 10. Whether to keep the default gate or use a stricter or looser one. Note that loosening it needs the approver's agreement.
 
@@ -92,7 +92,7 @@ Check which scanners are installed, using the check command in `scanners.md`. Th
 
 Install only with the user's approval, using official package managers. Never pipe a remote script into a shell.
 
-If a category has no tool and installation isn't possible (common in restricted Cowork environments), continue. Mark the audit **"Reduced coverage"** in `scope.md` and in every summary, naming the categories that relied on Claude's review alone.
+If a category has no tool and installation isn't possible (common in sandboxed or cloud environments without network access), continue. Mark the audit **"Reduced coverage"** in `scope.md` and in every summary, naming the categories that relied on your own review alone.
 
 **What "Full" coverage means:**
 
@@ -106,15 +106,15 @@ Missing optional tools don't reduce coverage. Smaller gaps, such as a dependency
 
 1. Create the run folder `.security-audit/raw/R<n>/`, where `<n>` is the next run number.
 2. Run each available scanner with the commands in `scanners.md`, saving output as JSON in that folder.
-3. Record each tool's name and version, the command, the run time and the exit status in the run notes.
+3. Record each tool's name and version, the command, the run time and the exit status, for the run summary (`runs/R<n>.md`) and the run's entry in `findings.json`. Record the agent and model doing the review in the run's `agent` field in `findings.json` and in the run summary, using the names given in your own instructions or by the user. Don't run commands or open settings or environment files to find them. If they aren't stated, write "not reported".
 
 A scanner's non-zero exit code usually means "findings found", not failure. Check the output file.
 
 If a scanner fails, note it and continue. Don't spend more than two attempts fixing a broken tool.
 
-## Step 5: Claude's review
+## Step 5: Your own review
 
-Work through `checklist.md`, starting with the hotspots from Step 2. Scanners find patterns; your job is what they miss: whether access checks exist, whether a value can reach a dangerous call, and whether the business logic can be abused.
+Work through `checklist.md`, starting with the hotspots from Step 2. The register records this review as `ai-review` ("AI review"). Scanners find patterns; your job is what they miss: whether access checks exist, whether a value can reach a dangerous call, and whether the business logic can be abused.
 
 For each candidate issue:
 

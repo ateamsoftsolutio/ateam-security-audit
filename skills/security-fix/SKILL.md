@@ -39,7 +39,7 @@ Ask who owns each finding, record it in the `owner` field, and log an `owner` ev
 
 A good root cause **names the untrusted input and the dangerous mechanism** (the call, the missing check or the setting), and matches the finding's evidence.
 
-- Reject vague answers, such as "bug", "fixed it", "input wasn't cleaned", "security issue" or "Claude said so", and ask again.
+- Reject vague answers, such as "bug", "fixed it", "input wasn't cleaned", "security issue" or "the AI said so", and ask again.
 - Reject answers that are specific but wrong, and explain the difference.
 
 For Medium and below, a root cause is encouraged but optional.
@@ -108,7 +108,7 @@ If the secret was in a **public** repository or a published build, tell the user
 ## "This is a false positive"
 
 1. Ask for the reason and check it against the code. A false positive means **the issue doesn't exist**. "It's real but low risk" or "it only matters locally" is a case for an accepted risk or a lower severity, not a false positive. Say so if that's the situation.
-2. Record your view in `falsePositive.claudeView`: agree, or disagree with the reason.
+2. Record your view in `falsePositive.aiView`: agree, or disagree with the reason.
 3. If you agree, or the developer still wants a review after hearing your view, set the status to `False positive (pending review)`. Record the reason, who raised it and the requested reviewer: a named person other than the one who raised it. You can't be the reviewer.
 4. When the reviewer confirms in the conversation, set the status to `False positive` and record the reviewer and date. Your recorded view stays in the register either way. If they disagree, return it to `Open`.
 

@@ -39,7 +39,7 @@ The register is the single source of truth for the audit loop. All three skills 
 - **Repository:** private / public. Register committed: yes / no.
 - **Connectors and consent:** GitHub (tickets: yes; code: not sent) · Snyk (not approved) · ...
 - **Gate:** <default or as agreed, with approver>
-- **Coverage:** Full / Reduced (<categories relying on Claude review alone>)
+- **Coverage:** Full / Reduced (<categories relying on AI review alone>)
 
 ## Attack surface map
 Entry points · Authentication · Authorisation · Data stores and external calls · AI features · Infrastructure and CI · Size
@@ -60,7 +60,7 @@ Entry points · Authentication · Authorisation · Data stores and external call
   "runs": [
     { "id": "R1", "date": "2026-10-06", "commit": "a1b2c3d", "type": "full", "coverage": "Full",
       "tools": [{ "name": "semgrep", "version": "1.179.0" }, { "name": "gitleaks", "version": "8.28.0" }],
-      "gate": "failed" }
+      "agent": "<agent and model, as reported>", "gate": "failed" }
   ],
   "findings": [
     {
@@ -76,7 +76,7 @@ Entry points · Authentication · Authorisation · Data stores and external call
           "fpInput": "CWE-89|api/patients/search.js|searchPatients|const sql = \"SELECT * FROM patients WHERE name = '\" + req.query.name + \"'\";",
           "resolved": false }
       ],
-      "sources": ["semgrep:javascript.express.security.injection.tainted-sql-string", "claude-review"],
+      "sources": ["semgrep:javascript.express.security.injection.tainted-sql-string", "ai-review"],
       "evidence": "req.query.name is concatenated into the SQL string passed to db.query()",
       "impact": "Any logged-in user can read or change the whole patients table",
       "fix": "Use a parameterised query; validate name length and characters",
@@ -106,9 +106,11 @@ Entry points · Authentication · Authorisation · Data stores and external call
 
 | Field | Contents |
 |---|---|
+| `sources` | Where the finding came from: `<scanner>:<rule ID>`, `github:<alert type>#<number>`, or `ai-review` for the agent's own review, whichever agent or model did it. |
+| `runs[].agent` | The agent and model that did the review, as named in the agent's instructions or by the user, or "not reported". |
 | `secret` | `{ "type": "PostgreSQL password", "keyName": "DATABASE_URL", "masked": "pg_p••••x9Q1", "inHistoryOnly": false, "removedFromCode": false, "rotated": false, "rotatedBy": null, "rotatedOn": null }` |
 | `verification` | `{ "run": "R3", "commit": "e7f8a9b", "evidence": "Query now parameterised (search.js:40-44); Semgrep rule no longer matches", "test": "added: test/search.sql-injection.test.js, passes" }`. If there's no test, say why, for example `"none: project has no test suite"`. |
-| `falsePositive` | `{ "reason": "...", "raisedBy": "Anu", "claudeView": "agrees / disagrees: ...", "reviewerRequested": "Rahul", "reviewer": null, "date": null }` |
+| `falsePositive` | `{ "reason": "...", "raisedBy": "Anu", "aiView": "agrees / disagrees: ...", "reviewerRequested": "Rahul", "reviewer": null, "date": null }` |
 | `acceptedRisk` | `{ "reason": "...", "compensatingControl": "...", "proposedBy": "Rahul", "expiresRequested": "2027-01-05", "approverRequired": "Product Owner", "approver": null, "date": null, "expires": null }`. `approver`, `date` and `expires` are filled in only on approval; `expires` is counted from the approval date. |
 | `ticket` | `{ "system": "github", "ref": "#118", "url": "<link to the issue>" }` |
 
@@ -132,23 +134,23 @@ Each location also stores `fpInput`, the exact values used for its fingerprint (
 | Change | Made by | Requires |
 |---|---|---|
 | Open or Reopened → Fixed | `security-fix` | A fix note. For Critical and High, the developer's one-line root cause. For secrets, rotation confirmed by the developer. |
-| Fixed → Verified | `security-verify` only | The scanner no longer reports it, Claude has read the changed code and agrees it removes the root cause, and any test added for it passes. Every location must be resolved. |
+| Fixed → Verified | `security-verify` only | The scanner no longer reports it, the agent has read the changed code and agrees it removes the root cause, and any test added for it passes. Every location must be resolved. |
 | Fixed → Open | `security-verify` | Still present; note "Fix did not resolve" with the reason |
 | Verified → Reopened | `security-verify` | Found again |
-| Open → False positive (pending review) → False positive | `security-fix` | A reason, plus a reviewer who is a named person other than the one who raised it. Claude records its own view, but can't be the reviewer. |
+| Open → False positive (pending review) → False positive | `security-fix` | A reason, plus a reviewer who is a named person other than the one who raised it. The agent records its own view, but can't be the reviewer. |
 | Open → Accepted risk (pending approval) → Accepted risk | `security-fix` | A reason, a compensating control if any, the approver named in the house rules, and an expiry date no more than `maxAcceptDays` after the approval date. A longer request is capped, and the user is told. Critical findings can't be accepted unless `criticalAcceptable` is true. |
 | Accepted risk → Open | `security-verify` | The expiry date has passed |
 
-Names are recorded as the user states them, followed by "(stated)" in `history.jsonl`. Claude can't verify identities; commit and ticket history provide stronger evidence.
+Names are recorded as the user states them, followed by "(stated)" in `history.jsonl`. The agent can't verify identities; commit and ticket history provide stronger evidence.
 
 ## Fingerprints
 
-A fingerprint identifies the same issue across runs, even when line numbers change. Compute one per location as the first 16 hex characters of SHA-256 over these values, joined with `|`:
+A fingerprint identifies the same issue across runs, even when line numbers change. Compute one per location from the values below, joined with `|`: take the SHA-256 digest of the UTF-8 text, with no trailing newline, and keep the first 16 characters of the lowercase hex. In a code line, replace each run of whitespace with one space and trim both ends. Every agent and shell must produce the same value.
 
 | Kind | Values |
 |---|---|
 | Code issues | `CWE` · `file path` · `enclosing function, method or route` (or `-`) · `primary code line with whitespace collapsed` |
-| Secrets | `CWE-798` · `file path where it was first found` (keep this path even after the file is deleted) · `scanner rule ID`, or `claude:<secret type>` if found by review · the **variable or key name** holding it, exactly as written (for example `DATABASE_URL` or `apiKey`), or `-`. Never include the secret or a code line containing it. |
+| Secrets | `CWE-798` · `file path where it was first found` (keep this path even after the file is deleted) · `scanner rule ID`, or `review:<secret type>` if found by review · the **variable or key name** holding it, exactly as written (for example `DATABASE_URL` or `apiKey`), or `-`. Never include the secret or a code line containing it. |
 | Dependencies | `dep` · `ecosystem` · `package name` (no version, so an upgrade that's still vulnerable matches) |
 | Configuration and IaC | `CWE` · `file path` · `resource or key name` |
 
@@ -159,13 +161,19 @@ printf '%s|%s|%s|%s' "CWE-89" "api/patients/search.js" "searchPatients" \
   "$(sed -n '42p' api/patients/search.js | tr -s '[:space:]' ' ' | sed 's/^ //;s/ $//')" | sha256sum | cut -c1-16
 ```
 
+The example assumes a POSIX shell. In PowerShell, compute the same digest and convert it to lowercase.
+
 **Matching on a rescan:**
 
 1. Look for an exact fingerprint match.
 2. If there isn't one, look for the same CWE in the same file and function. That means the code changed but the issue may still be there. Read it and decide. Record "matched by function" in the history note.
 3. If nothing matches and the issue is gone, the location is resolved. Confirm by reading the code.
 
-**Secrets are different.** Match them using the `fpInput` stored in the register. A committed secret is still present, even if its file has been deleted, until `secret.rotated` is true: it remains in git history. Removing it from the code alone sets `removedFromCode: true` and leaves the finding Open.
+**Secrets are different.** A committed secret stays in git history even after its file is deleted. To match a secret on a rescan:
+
+1. Find stored secret findings with the same CWE, file path and key name. If the key name is `-`, compare the whole stored `fpInput` instead. For secrets found by review, ignore differences in how the secret type is worded, and reuse the stored `secret.type`. For registers from version 1.0, also see "Registers from version 1.0" below.
+2. Compare the masked form of the value found now with the stored `secret.masked`. If they differ, it's a different secret, even under the same key name. Register it as a new finding, whatever the old finding's status.
+3. If it's the same secret, it's the same finding. It stays present until `secret.rotated` is true. Removing it from the code alone sets `removedFromCode: true` and leaves the finding Open.
 
 ## FINDINGS.md layout
 
@@ -183,7 +191,7 @@ Last run R3 · commit e7f8a9b · 2026-10-08 · Gate: FAILED · Coverage: Full
 ### SEC-011 · High · JWT accepted without expiry check
 - **Where:** auth/verify.js:18 (verifyToken)
 - **Category:** A07:2025 · CWE-287 · Confidence: Confirmed
-- **Found by:** Claude review
+- **Found by:** AI review
 - **What's wrong:** ...
 - **Impact:** ...
 - **How to fix:** ...
@@ -207,7 +215,7 @@ Sort by severity, then ID. Keep Verified entries to one line each.
 Each run summary records:
 
 - run ID, date, commit, type (full or quick) and coverage
-- tools and versions, and any tool failures
+- tools and versions, any tool failures, and the agent and model that did the review
 - any scope changes since the previous run
 - counts by severity and status
 - **changes since the previous run:** Verified · Still open · Fix did not resolve · Reopened · New · Accepted risks expired
@@ -240,3 +248,16 @@ Write SARIF 2.1.0 with:
 - `partialFingerprints`: `{ "securityAudit/v1": "<fingerprint>" }`
 
 Include only findings that aren't closed. Never include secret values.
+
+## Registers from version 1.0
+
+Version 1.0 of the plugin wrote some values differently. The first time you write `findings.json` for a register from version 1.0, convert them as follows:
+
+| Version 1.0 | Now | What to do |
+|---|---|---|
+| `claude-review` in `sources` | `ai-review` | Replace it in every finding |
+| `falsePositive.claudeView` | `falsePositive.aiView` | Rename it in every finding |
+| `claude:<secret type>` in a secret's `fpInput` | `review:<secret type>` | Keep the stored `fpInput` and fingerprint unchanged. When matching, treat the two prefixes as the same. |
+| A run with no `agent` | `agent` | Leave it, and report it as "not recorded (version 1.0)" |
+
+Everyone who shares a register should use version 1.1.0 or later, because version 1.0 doesn't recognise the new names.

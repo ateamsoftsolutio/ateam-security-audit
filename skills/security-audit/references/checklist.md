@@ -1,4 +1,4 @@
-# Claude's review checklist
+# Review checklist
 
 Scanners are good at patterns. This checklist is for what they miss. Start with the hotspots in the attack surface map, then cover the rest as far as the project's size allows. For each item, read the real code path. Don't report an issue the framework already prevents.
 
